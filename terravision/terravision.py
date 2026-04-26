@@ -205,8 +205,8 @@ def compile_tfdata(
         annotate: Path to custom annotations YAML file
         planfile: Path to pre-generated Terraform plan JSON file
         graphfile: Path to pre-generated Terraform graph DOT file
-        aibackend: Optional AI backend ("ollama" / "bedrock") for AI
-            annotation generation. Empty string disables AI.
+        aibackend: Optional AI backend ("ollama" / "bedrock" / "restapi")
+            for AI annotation generation. Empty string disables AI.
 
     Returns:
         Enriched tfdata dictionary with graphdict and metadata
@@ -310,20 +310,22 @@ def preflight_check(ai_backend: Optional[str] = None) -> None:
     """Check required dependencies and Terraform version compatibility.
 
     Args:
-        ai_backend: AI backend to validate ('ollama' or 'bedrock')
+        ai_backend: AI backend to validate ('ollama', 'bedrock', or 'restapi')
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     helpers.check_dependencies()
     helpers.check_terraform_version()
 
     if ai_backend:
-        # Load default AWS config for preflight (endpoints are the same across providers)
-        default_config = load_config("aws")
-
-        if ai_backend.lower() == "ollama":
+        backend_lower = ai_backend.lower()
+        if backend_lower == "ollama":
+            # OLLAMA_HOST is provider-agnostic; pulled from default config.
+            default_config = load_config("aws")
             llm.check_ollama_server(default_config.OLLAMA_HOST)
-        elif ai_backend.lower() == "bedrock":
-            llm.check_bedrock_endpoint(default_config.BEDROCK_API_ENDPOINT)
+        elif backend_lower == "bedrock":
+            llm.check_bedrock_credentials()
+        elif backend_lower == "restapi":
+            llm.check_restapi_endpoint()
 
     click.echo("\n")
 
@@ -387,8 +389,8 @@ def cli(ctx) -> None:
 @click.option(
     "--ai-annotate",
     default="",
-    type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
-    help="Generate AI annotations file using the named backend (bedrock or ollama)",
+    type=click.Choice(["", "bedrock", "ollama", "restapi"], case_sensitive=False),
+    help="Generate AI annotations file using the named backend (bedrock, ollama, or restapi)",
 )
 @click.option("--avl_classes", hidden=True)
 @click.option(
@@ -518,8 +520,8 @@ def draw(
 @click.option(
     "--ai-annotate",
     default="",
-    type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
-    help="Generate AI annotations file using the named backend (bedrock or ollama)",
+    type=click.Choice(["", "bedrock", "ollama", "restapi"], case_sensitive=False),
+    help="Generate AI annotations file using the named backend (bedrock, ollama, or restapi)",
 )
 @click.option("--avl_classes", hidden=True)
 @click.option(
@@ -667,8 +669,8 @@ def graphdata(
 @click.option(
     "--ai-annotate",
     default="",
-    type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
-    help="Generate AI annotations file using the named backend (bedrock or ollama)",
+    type=click.Choice(["", "bedrock", "ollama", "restapi"], case_sensitive=False),
+    help="Generate AI annotations file using the named backend (bedrock, ollama, or restapi)",
 )
 @click.option("--avl_classes", hidden=True)
 @click.option(

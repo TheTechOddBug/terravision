@@ -93,7 +93,7 @@ terravision draw [OPTIONS]
 | `--show` | Open diagram after generation | False | `--show` |
 | `--simplified` | Generate simplified high-level diagram | False | `--simplified` |
 | `--annotate` | Path to annotations YAML file | None | `--annotate custom.yml` |
-| `--ai-annotate` | Generate AI annotations with specified backend (bedrock, ollama) | None | `--ai-annotate ollama` |
+| `--ai-annotate` | Generate AI annotations with specified backend (`bedrock`, `ollama`, `restapi`) | None | `--ai-annotate ollama` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--debug` | Enable debug output | False | `--debug` |
@@ -360,24 +360,88 @@ terravision draw --source ./path-to-your-terraform --simplified --outfile overvi
 
 ### AI-Powered Annotations
 
-When you pass `--ai-annotate <backend>`, TerraVision uses an LLM to generate a `terravision.ai.yml` annotation file containing AI-suggested edge labels, titles, external actors, and flow sequences. The deterministic graph is never modified by the AI -- all suggestions are written to the annotation file and merged with any existing `terravision.yml` at render time.
+When you pass `--ai-annotate <backend>`, TerraVision uses an LLM to generate a `terravision.ai.yml` annotation file containing AI-suggested edge labels, titles, external actors, and flow sequences. The deterministic graph is never modified by the AI — all suggestions are written to the annotation file and merged with any existing `terravision.yml` at render time.
 
 This replaces the old `refine_with_llm` behaviour, which modified the graph directly. The new approach is safer (the graph is byte-identical with or without `--ai-annotate`) and auditable (you can inspect `terravision.ai.yml` to see exactly what the AI suggested).
 
+#### Choosing a backend
+
+Three backends are supported. They produce equivalent output — pick the one that matches where you want the inference to run.
+
+| Backend | Where inference runs | Authentication | Best for |
+|---|---|---|---|
+| `ollama` | Local Ollama server (default `http://localhost:11434`) | None | Air-gapped / private setups, dev iteration without cloud cost |
+| `bedrock` | AWS Bedrock via `boto3` (Converse streaming API) | Standard AWS credential chain (env vars, `~/.aws/credentials`, IAM role, SSO) | AWS-native users; CI runners with an IAM role already attached |
+| `restapi` | Any OpenAI-compatible `/v1/chat/completions` endpoint | Bearer token | OpenAI, Anthropic via LiteLLM, vLLM, LM Studio, OpenRouter, custom proxies |
+
 ```bash
-# Generate AI annotations with local Ollama
+# Local Ollama
 poetry run terravision draw --source ./path-to-your-terraform --ai-annotate ollama
 
-# Generate AI annotations with AWS Bedrock
+# AWS Bedrock (uses your default AWS credentials)
 poetry run terravision draw --source ./path-to-your-terraform --ai-annotate bedrock
+
+# Generic OpenAI-compatible endpoint
+poetry run terravision draw --source ./path-to-your-terraform --ai-annotate restapi
 ```
 
-**How it works:**
+#### Configuration
+
+Backend behaviour is controlled by environment variables. Defaults are sensible for the common case so most users won't need to set anything.
+
+**`bedrock`** — calls AWS Bedrock directly via `boto3`. Authentication uses the standard AWS credential chain, so anything that works for the `aws` CLI (env vars, `~/.aws/credentials`, IAM role, SSO) works here too. No infrastructure to deploy.
+
+| Variable | Default | Description |
+|---|---|---|
+| `TV_BEDROCK_REGION` | `us-east-1` | AWS region the Bedrock Runtime client is created in |
+| `TV_BEDROCK_MODEL_ID` | `us.anthropic.claude-haiku-4-5-20251001-v1:0` | Bedrock model id to invoke. Any Converse-compatible model works (Claude family, Nova, Llama, Mistral); cross-region inference profile ids are accepted as-is |
+
+```bash
+# Override the model and region
+export TV_BEDROCK_REGION=eu-west-1
+export TV_BEDROCK_MODEL_ID=us.anthropic.claude-sonnet-4-5-20250929-v1:0
+poetry run terravision draw --source ./infra --ai-annotate bedrock
+```
+
+**`restapi`** — POSTs an OpenAI-compatible chat-completions request and parses the streamed SSE response. All three variables are required; preflight will fail fast if any is missing.
+
+| Variable | Required | Description |
+|---|---|---|
+| `TV_RESTAPI_URL` | yes | Full URL including the `/v1/chat/completions` path |
+| `TV_RESTAPI_KEY` | yes | Bearer token sent as `Authorization: Bearer <key>` |
+| `TV_RESTAPI_MODEL` | yes | Model id passed through verbatim in the request payload |
+
+Examples for common setups:
+
+```bash
+# OpenAI direct
+export TV_RESTAPI_URL=https://api.openai.com/v1/chat/completions
+export TV_RESTAPI_KEY=sk-...
+export TV_RESTAPI_MODEL=gpt-4o-mini
+
+# Anthropic via LiteLLM proxy (or any OpenAI-shim in front of Claude)
+export TV_RESTAPI_URL=https://your-litellm-proxy.example/v1/chat/completions
+export TV_RESTAPI_KEY=sk-litellm-...
+export TV_RESTAPI_MODEL=claude-haiku-4-5
+
+# Local vLLM / LM Studio
+export TV_RESTAPI_URL=http://localhost:8000/v1/chat/completions
+export TV_RESTAPI_KEY=not-needed
+export TV_RESTAPI_MODEL=meta-llama/Llama-3.1-8B-Instruct
+
+poetry run terravision draw --source ./infra --ai-annotate restapi
+```
+
+**`ollama`** — no environment variables; the server URL is hard-coded to `http://localhost:11434`. Edit `OLLAMA_HOST` in `modules/config/cloud_config_<provider>.py` if you need to point at a remote Ollama.
+
+#### How it works
+
 1. TerraVision builds the graph deterministically (identical to a non-AI run)
-2. The graph and HCL context are sent to the LLM, which returns YAML annotations
-3. The AI annotations are written to `terravision.ai.yml` in the source directory
-4. If a user `terravision.yml` also exists, both files are merged (user file takes precedence)
-5. The merged annotations are applied to the graph before rendering
+2. The graph inventory + edges + project context (README, HCL comments, tags) are sent to the LLM, which returns YAML annotations
+3. Every resource reference in the response is validated against the deterministic graphdict; references to non-existent nodes or edges are silently dropped before the file is written
+4. The surviving annotations are written to `terravision.ai.yml` in the source directory, with a `generated_by` block recording the backend, model, and timestamp
+5. If a user `terravision.yml` also exists, both files are merged (user file takes precedence)
+6. The merged annotations are applied to the graph before rendering
 
 ### Two-File Model
 

@@ -46,7 +46,12 @@ def render_html(
         click.echo("  Completed (no resources found)")
         if show:
             abs_path = os.path.abspath(output_path)
-            webbrowser.open(f"file://{abs_path}")
+            from modules.helpers import is_wsl, wsl_open
+
+            if is_wsl():
+                wsl_open(abs_path)
+            else:
+                webbrowser.open(f"file://{abs_path}")
         return
 
     # Generate SVG with embedded icons using local Graphviz
@@ -74,10 +79,17 @@ def render_html(
     click.echo(f"  Output file: {output_path}")
     click.echo("  Completed!")
 
-    # Auto-open in browser if requested
+    # Auto-open in browser if requested. On WSL, webbrowser.open's
+    # xdg-open fallback is broken, so route through wslview;
+    # everywhere else keep the original webbrowser.open path.
     if show:
         abs_path = os.path.abspath(output_path)
-        webbrowser.open(f"file://{abs_path}")
+        from modules.helpers import is_wsl, wsl_open
+
+        if is_wsl():
+            wsl_open(abs_path)
+        else:
+            webbrowser.open(f"file://{abs_path}")
 
 
 def _write_empty_diagram(outfile: str) -> str:

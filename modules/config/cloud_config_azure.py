@@ -353,8 +353,3 @@ AZURE_MULTI_INSTANCE_PATTERNS = [
 
 # Replace with your OLLAMA server IP and port number
 OLLAMA_HOST = "http://localhost:11434"
-
-# Replace with your actual API Gateway endpoint
-BEDROCK_API_ENDPOINT = (
-    "https://yirz70b5mc.execute-api.us-east-1.amazonaws.com/prod/chat"
-)

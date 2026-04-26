@@ -882,17 +882,40 @@ This pattern is ideal when:
 
 ### Pattern 5: AI Annotations in CI Pipelines
 
-You can include `--ai-annotate <backend>` in CI runs to generate AI-powered annotations (edge labels, flow sequences, external actors) automatically. AWS Bedrock is a natural fit for pipelines already running in AWS, since authentication uses the same IAM role:
+You can include `--ai-annotate <backend>` in CI runs to generate AI-powered annotations (edge labels, flow sequences, external actors) automatically. Three backends are available; pick the one that matches your CI environment.
+
+**Bedrock** is a natural fit for pipelines already running in AWS — authentication uses the same IAM role, so no extra secrets to manage:
 
 ```bash
 # In a CI step that already has AWS credentials configured
+# (env vars, OIDC role assumption, instance profile, etc.)
 terravision draw \
   --source ./infrastructure \
   --ai-annotate bedrock \
   --format png
+
+# Override the model or region if needed
+TV_BEDROCK_REGION=eu-west-1 \
+TV_BEDROCK_MODEL_ID=us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
+  terravision draw --source ./infrastructure --ai-annotate bedrock --format png
 ```
 
-For non-AWS environments, or when you prefer local inference, use Ollama in a sidecar container:
+**REST API** is the right choice when you want to use OpenAI, an enterprise LLM gateway, or a self-hosted endpoint. Pass the endpoint, key, and model via env vars (the key should come from your CI secret store):
+
+```yaml
+# GitHub Actions example with OpenAI
+steps:
+  - name: Generate AI-Annotated Diagram
+    run: |
+      pip install terravision
+      terravision draw --source ./infrastructure --ai-annotate restapi --format png
+    env:
+      TV_RESTAPI_URL: https://api.openai.com/v1/chat/completions
+      TV_RESTAPI_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TV_RESTAPI_MODEL: gpt-4o-mini
+```
+
+**Ollama** keeps inference fully local — useful for non-AWS environments or air-gapped runners. Run it as a sidecar container:
 
 ```yaml
 # GitHub Actions example with Ollama sidecar

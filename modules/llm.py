@@ -8,13 +8,23 @@ output is a *supplementary* artifact that the renderer merges in at
 draw time, with the user's hand-authored ``terravision.yml`` always
 winning on conflict.
 
-The legacy ``refine_with_llm()`` flow — which sent graphdict to the LLM
-and replaced it with the response — has been removed. The two backend
-stream helpers and preflight reachability checks are retained because
-they are reused for annotation generation.
+Three backends are supported:
+
+  * ``ollama``  — local llama3 (or any model) via the Ollama HTTP API
+    on ``localhost:11434``. Air-gapped / private path.
+  * ``bedrock`` — AWS Bedrock Converse streaming via ``boto3``,
+    authenticated through the standard AWS credential chain (env vars,
+    ``~/.aws/credentials``, IAM role, SSO). Region and model id are
+    overridable via ``TV_BEDROCK_REGION`` and ``TV_BEDROCK_MODEL_ID``.
+  * ``restapi`` — generic OpenAI-compatible ``/v1/chat/completions``
+    endpoint with SSE streaming. Endpoint, bearer token, and model id
+    are supplied via ``TV_RESTAPI_URL``, ``TV_RESTAPI_KEY``, and
+    ``TV_RESTAPI_MODEL``. Works against OpenAI, Anthropic-via-proxy,
+    LiteLLM, vLLM, LM Studio, OpenRouter, etc.
 """
 
 import datetime as _dt
+import json
 import os
 import re
 import sys
@@ -28,6 +38,57 @@ import yaml
 
 from modules.config_loader import load_config
 from modules.provider_detector import get_primary_provider_or_default
+
+# ---------------------------------------------------------------------------
+# Backend defaults / env-var names
+#
+# These live as module constants so tests can monkeypatch them and so
+# callers see the same source of truth for env-var spellings.
+# ---------------------------------------------------------------------------
+
+_DEFAULT_BEDROCK_REGION = "us-east-1"
+_DEFAULT_BEDROCK_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
+_ENV_BEDROCK_REGION = "TV_BEDROCK_REGION"
+_ENV_BEDROCK_MODEL_ID = "TV_BEDROCK_MODEL_ID"
+
+_ENV_RESTAPI_URL = "TV_RESTAPI_URL"
+_ENV_RESTAPI_KEY = "TV_RESTAPI_KEY"
+_ENV_RESTAPI_MODEL = "TV_RESTAPI_MODEL"
+
+
+def _bedrock_region() -> str:
+    return os.environ.get(_ENV_BEDROCK_REGION) or _DEFAULT_BEDROCK_REGION
+
+
+def _bedrock_model_id() -> str:
+    return os.environ.get(_ENV_BEDROCK_MODEL_ID) or _DEFAULT_BEDROCK_MODEL_ID
+
+
+def _restapi_settings() -> Tuple[str, str, str]:
+    """Return (url, api_key, model) from the environment.
+
+    Raises a ``RuntimeError`` if any required value is missing — the
+    restapi backend has no sensible default URL, so we fail loudly rather
+    than guess.
+    """
+    url = os.environ.get(_ENV_RESTAPI_URL, "").strip()
+    key = os.environ.get(_ENV_RESTAPI_KEY, "").strip()
+    model = os.environ.get(_ENV_RESTAPI_MODEL, "").strip()
+    missing = [
+        name
+        for name, value in (
+            (_ENV_RESTAPI_URL, url),
+            (_ENV_RESTAPI_KEY, key),
+            (_ENV_RESTAPI_MODEL, model),
+        )
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(
+            "restapi backend requires environment variables: " + ", ".join(missing)
+        )
+    return url, key, model
 
 # ---------------------------------------------------------------------------
 # Backend reachability checks (preflight)
@@ -65,32 +126,88 @@ def check_ollama_server(ollama_host: str) -> None:
         sys.exit()
 
 
-def check_bedrock_endpoint(bedrock_endpoint: str) -> None:
-    """Check if Bedrock API endpoint is reachable.
+def check_bedrock_credentials() -> None:
+    """Verify AWS credentials are configured for the Bedrock backend.
 
-    Args:
-        bedrock_endpoint: Bedrock API Gateway endpoint URL
+    Calls ``sts:GetCallerIdentity`` — the cheapest, read-only,
+    universally-available probe — to confirm boto3 has resolvable
+    credentials and can reach AWS. We do NOT call Bedrock directly here
+    because that would require Bedrock IAM permissions just to run
+    preflight; users may have valid creds but no Bedrock access until
+    the real call. STS keeps the preflight permissionless.
     """
-    click.echo("  checking Bedrock API Gateway endpoint..")
+    click.echo("  checking AWS credentials for Bedrock..")
     try:
-        response = requests.get(bedrock_endpoint, timeout=5, stream=True)
-        if response.status_code in [200, 403, 404]:
-            click.echo(f"  Bedrock API Gateway reachable at: {bedrock_endpoint}")
-            if response.status_code == 200:
-                response.close()
-        else:
-            click.echo(
-                click.style(
-                    f"\n  ERROR: Bedrock API Gateway returned status {response.status_code}",
-                    fg="red",
-                    bold=True,
-                )
+        import boto3  # local import: pay the cost only on the bedrock path
+        from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
+    except ImportError as e:
+        click.echo(
+            click.style(
+                "\n  ERROR: boto3 is required for the bedrock backend but is "
+                f"not installed: {e}",
+                fg="red",
+                bold=True,
             )
-            sys.exit()
+        )
+        sys.exit()
+
+    region = _bedrock_region()
+    model_id = _bedrock_model_id()
+    try:
+        sts = boto3.client("sts", region_name=region)
+        identity = sts.get_caller_identity()
+        click.echo(
+            f"  AWS credentials OK (account={identity.get('Account')}, region={region})"
+        )
+        click.echo(f"  Bedrock model: {model_id}")
+    except NoCredentialsError:
+        click.echo(
+            click.style(
+                "\n  ERROR: No AWS credentials found. Configure via env vars, "
+                "~/.aws/credentials, IAM role, or SSO.",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit()
+    except (BotoCoreError, ClientError) as e:
+        click.echo(
+            click.style(
+                f"\n  ERROR: Could not verify AWS credentials: {e}",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit()
+
+
+def check_restapi_endpoint() -> None:
+    """Verify the OpenAI-compatible REST API endpoint is configured and reachable.
+
+    Validates that the three required env vars are set, then performs a
+    cheap ``GET`` against the URL's host (most OpenAI-compatible servers
+    return 4xx on a bare GET to ``/v1/chat/completions``, which is fine
+    — we just want TCP + TLS to work, not a real completion).
+    """
+    click.echo("  checking REST API endpoint..")
+    try:
+        url, _, model = _restapi_settings()
+    except RuntimeError as e:
+        click.echo(click.style(f"\n  ERROR: {e}", fg="red", bold=True))
+        sys.exit()
+
+    try:
+        # A bare GET on a chat-completions URL is expected to return 4xx.
+        # We accept any HTTP response as proof of reachability — we are
+        # not authenticating here, only confirming the network path.
+        response = requests.get(url, timeout=5)
+        click.echo(
+            f"  REST API reachable at: {url} (status={response.status_code}, model={model})"
+        )
     except requests.exceptions.RequestException as e:
         click.echo(
             click.style(
-                f"\n  ERROR: Cannot reach Bedrock API Gateway endpoint at {bedrock_endpoint}: {e}",
+                f"\n  ERROR: Cannot reach REST API endpoint at {url}: {e}",
                 fg="red",
                 bold=True,
             )
@@ -244,7 +361,8 @@ def _build_actors_block(config: Any, provider: str) -> str:
     lines: List[str] = []
     for actor in sorted(actors):
         # Derive a human-readable description from the node name:
-        # tv_aws_users.users → "users", tv_aws_onprem.corporate_datacenter → "corporate datacenter"
+        # tv_aws_users.users → "users",
+        # tv_aws_onprem.corporate_datacenter → "corporate datacenter"
         suffix = actor.split(".")[-1] if "." in actor else actor
         description = suffix.replace("_", " ")
         lines.append(f"  {actor:<45s} - {description}")
@@ -343,12 +461,17 @@ def _extract_context_block(
 
 
 # ---------------------------------------------------------------------------
-# Backend streaming helpers (Ollama + Bedrock).
+# Backend streaming helpers (Ollama + Bedrock + REST API).
 #
-# Both backends remain supported. Ollama is the local/air-gapped path;
-# Bedrock is the cloud path (proxied through an API Gateway endpoint).
-# Streaming is preserved so users see incremental output for long
-# generations.
+# Streaming is preserved across all three backends so users see
+# incremental output for long generations.
+#
+#   * Ollama   — Python client streams parsed chunks; we concat .content
+#   * Bedrock  — boto3 Converse API; demux EventStream events and pull
+#                text from contentBlockDelta events. Auth is SigV4 via
+#                the standard boto3 credential chain — no signing here.
+#   * REST API — OpenAI-compatible /v1/chat/completions with SSE
+#                streaming (`data: {...}\n\n` framing, `[DONE]` sentinel).
 # ---------------------------------------------------------------------------
 
 
@@ -373,24 +496,99 @@ def _stream_ollama_text(
     return full_response
 
 
-def _stream_bedrock_text(prompt: str, bedrock_endpoint: str) -> str:
-    """Stream a chat completion from Bedrock proxy and return the full string."""
+def _stream_bedrock_text(prompt: str) -> str:
+    """Stream a chat completion from AWS Bedrock via the Converse API.
+
+    Uses ``bedrock-runtime.converse_stream`` so the same code works
+    across every Bedrock chat model (Claude, Llama, Nova, Mistral) by
+    swapping ``TV_BEDROCK_MODEL_ID``. Authenticates through the standard
+    boto3 credential chain — env vars, ``~/.aws/credentials``, IAM
+    role, or SSO. Region defaults to ``us-east-1`` (override with
+    ``TV_BEDROCK_REGION``).
+
+    The streaming response is a sequence of typed events; we pull text
+    from ``contentBlockDelta`` events and ignore framing events
+    (``messageStart``, ``contentBlockStop``, ``messageStop``,
+    ``metadata``). This is structurally different from a raw HTTP body
+    stream and is why the old API-Gateway-style ``iter_content`` loop
+    is not reusable here.
+    """
+    import boto3  # local import: avoid forcing boto3 onto ollama-only users
+
+    client = boto3.client("bedrock-runtime", region_name=_bedrock_region())
+    response = client.converse_stream(
+        modelId=_bedrock_model_id(),
+        messages=[{"role": "user", "content": [{"text": prompt}]}],
+        inferenceConfig={"temperature": 0, "maxTokens": 10000},
+    )
+
+    full_response = ""
+    for event in response["stream"]:
+        if "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"].get("delta", {})
+            text = delta.get("text", "")
+            if text:
+                print(text, end="", flush=True)
+                full_response += text
+    return full_response
+
+
+def _stream_restapi_text(prompt: str) -> str:
+    """Stream a chat completion from any OpenAI-compatible endpoint.
+
+    Sends a standard ``/v1/chat/completions`` request with
+    ``stream: true`` and parses the Server-Sent Events response,
+    pulling ``choices[0].delta.content`` from each chunk. Accepts the
+    ``data: [DONE]`` sentinel as the terminator.
+
+    Endpoint, bearer token, and model id come from
+    ``TV_RESTAPI_URL`` / ``TV_RESTAPI_KEY`` / ``TV_RESTAPI_MODEL``.
+    """
+    url, api_key, model = _restapi_settings()
     payload = {
+        "model": model,
         "messages": [{"role": "user", "content": prompt}],
+        "stream": True,
+        "temperature": 0,
         "max_tokens": 10000,
     }
     response = requests.post(
-        bedrock_endpoint,
+        url,
         json=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "text/event-stream",
+        },
         stream=True,
         timeout=300,
     )
+    response.raise_for_status()
+
     full_response = ""
-    for chunk in response.iter_content(chunk_size=None, decode_unicode=True):
-        if chunk:
-            print(chunk, end="", flush=True)
-            full_response += chunk
+    for raw_line in response.iter_lines(decode_unicode=True):
+        if not raw_line:
+            continue
+        # SSE lines start with "data: "; ignore other field types
+        # (event:, id:, retry:) — none of them carry token text.
+        if not raw_line.startswith("data:"):
+            continue
+        data = raw_line[len("data:") :].strip()
+        if data == "[DONE]":
+            break
+        try:
+            chunk = json.loads(data)
+        except json.JSONDecodeError:
+            # Malformed chunk; skip rather than abort the whole stream.
+            continue
+        choices = chunk.get("choices") or []
+        if not choices:
+            continue
+        delta = choices[0].get("delta") or {}
+        content = delta.get("content") or ""
+        if content:
+            print(content, end="", flush=True)
+            full_response += content
     return full_response
 
 
@@ -591,15 +789,19 @@ def _validate_against_graphdict(
 def _resolve_model_identifier(backend: str) -> str:
     """Best-effort identification of the model in use.
 
-    For ollama we record the default chat model. For bedrock we record
-    the proxy endpoint host because the actual model is server-side.
-    The result lands in the ``generated_by`` block of the written
-    annotation file so users can see what produced the output and
-    reproduce results across runs.
+    Used in the ``generated_by`` provenance block so users can see what
+    produced the output and reproduce results across runs.
     """
-    if backend.lower() == "ollama":
+    backend_lower = backend.lower()
+    if backend_lower == "ollama":
         return "llama3"
-    return "bedrock-proxy"
+    if backend_lower == "bedrock":
+        return _bedrock_model_id()
+    if backend_lower == "restapi":
+        # Don't crash provenance recording if env vars are missing — the
+        # caller will already have failed elsewhere.
+        return os.environ.get(_ENV_RESTAPI_MODEL, "unknown")
+    return backend_lower
 
 
 def _utc_timestamp() -> str:
@@ -732,7 +934,7 @@ def generate_ai_annotations(
         return None
 
     backend_lower = backend.lower()
-    if backend_lower not in ("ollama", "bedrock"):
+    if backend_lower not in ("ollama", "bedrock", "restapi"):
         click.echo(
             click.style(
                 f"  AI annotation skipped: unknown backend '{backend}'.",
@@ -784,8 +986,10 @@ def generate_ai_annotations(
         if backend_lower == "ollama":
             client = create_ollama_client(config.OLLAMA_HOST)
             raw_response = _stream_ollama_text(client, prompt)
-        else:
-            raw_response = _stream_bedrock_text(prompt, config.BEDROCK_API_ENDPOINT)
+        elif backend_lower == "bedrock":
+            raw_response = _stream_bedrock_text(prompt)
+        else:  # restapi
+            raw_response = _stream_restapi_text(prompt)
     except (
         requests.exceptions.RequestException,
         ConnectionError,
@@ -802,6 +1006,9 @@ def generate_ai_annotations(
         )
         return None
     except Exception as exc:  # noqa: BLE001 — never propagate to user
+        # Catches botocore exceptions (BotoCoreError / ClientError /
+        # NoCredentialsError) for the bedrock path, RuntimeError from
+        # missing restapi env vars, malformed JSON in SSE chunks, etc.
         click.echo(
             click.style(
                 f"\n  WARNING: AI backend '{backend_lower}' raised {type(exc).__name__}: "

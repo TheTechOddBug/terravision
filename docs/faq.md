@@ -48,6 +48,8 @@ Only a compact summary:
 
 The LLM response is written to `terravision.ai.yml` as a human-readable annotation file, which is merged on top of the deterministic graph at render time. You can inspect exactly what the AI suggested before it appears on your diagram. See the [Annotations Guide](annotations.md) for details.
 
+**Where does the data go?** That depends on the backend you choose with `--ai-annotate`. With `ollama` it never leaves your machine. With `bedrock` it goes to AWS Bedrock in the region set by `TV_BEDROCK_REGION` (default `us-east-1`) and is bound by AWS's data-handling terms for that service. With `restapi` it goes wherever you've pointed `TV_RESTAPI_URL` — that's entirely your decision (OpenAI, an Anthropic-via-LiteLLM proxy, a self-hosted vLLM, etc.), so the destination's privacy policy is whatever you've configured.
+
 ### Can I audit what the AI changed?
 
 Yes. The `terravision.ai.yml` file is a plain YAML file containing every AI-suggested label, title, external actor, and flow. The underlying graph (`graphdict`) is byte-identical with or without `--ai-annotate` — AI suggestions flow through the annotation layer only, never into the graph itself.
@@ -55,9 +57,10 @@ Yes. The `terravision.ai.yml` file is a plain YAML file containing every AI-sugg
 ### Which LLM backends are supported?
 
 - **Ollama** (local) — runs on your own machine, no data leaves it. Recommended for most users.
-- **AWS Bedrock** — uses your AWS account and stays within AWS.
+- **AWS Bedrock** — calls Bedrock directly via `boto3` using the standard AWS credential chain (env vars, `~/.aws/credentials`, IAM role, SSO). Region and model id are overridable via `TV_BEDROCK_REGION` and `TV_BEDROCK_MODEL_ID`.
+- **REST API** (any OpenAI-compatible endpoint) — works with OpenAI, Anthropic-via-LiteLLM, vLLM, LM Studio, OpenRouter, or any custom proxy that speaks the OpenAI chat-completions schema. Configured via `TV_RESTAPI_URL`, `TV_RESTAPI_KEY`, and `TV_RESTAPI_MODEL`.
 
-You can also skip AI entirely and write your own `terravision.yml` by hand.
+See the [AI-Powered Annotations](usage-guide.md#ai-powered-annotations) section of the Usage Guide for the full configuration table. You can also skip AI entirely and write your own `terravision.yml` by hand.
 
 ---
 

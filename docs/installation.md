@@ -6,7 +6,8 @@
 - **Terraform 1.x** (v1.0.0 or higher) — not required when using `--planfile` mode
 - **Git**
 - **Graphviz**
-- **Ollama** (Optional - only for local AI refinement)
+- **Ollama** (Optional — only for local AI refinement)
+- **wslu** (Optional — required only on WSL if you use `--show` to auto-open diagrams)
 
 > **Note**: If you use the `--planfile` and `--graphfile` options to provide pre-generated Terraform outputs, Terraform itself does not need to be installed. Only Python, Graphviz, and Git are required. See the [Usage Guide](usage-guide.md#pre-generated-plan-input) for details.
 
@@ -67,6 +68,18 @@ Download from https://developer.hashicorp.com/terraform/downloads
 terraform version
 # Must show v1.0.0 or higher
 ```
+
+### WSL (Windows Subsystem for Linux)
+
+If you run TerraVision under WSL **and** intend to use the `--show` flag to auto-open generated diagrams, install `wslu`:
+
+```bash
+sudo apt install wslu
+```
+
+**Why:** WSL ships without a real Linux desktop, so the standard `xdg-open` lookup chain has no application database to consult and fails silently. The `wslu` package provides `wslview`, which calls back into Windows and uses your host file associations (PNG → Photos, SVG → browser, etc.). TerraVision automatically detects WSL at runtime and routes opens through `wslview`; without it the diagram still gets generated correctly, you just have to open the file yourself.
+
+If `wslu` isn't installed, TerraVision prints a one-line `sudo apt install wslu` hint when `--show` is used. You can also skip `--show` entirely and open the output file from Windows Explorer or your editor.
 
 ---
 

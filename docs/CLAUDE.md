@@ -41,9 +41,10 @@ pip install -r requirements.txt
 # Basic diagram generation
 poetry run terravision draw --source <path>
 
-# With AI annotation generation
-poetry run terravision draw --source <path> --ai-annotate bedrock
-poetry run terravision draw --source <path> --ai-annotate ollama
+# With AI annotation generation (three backends supported)
+poetry run terravision draw --source <path> --ai-annotate bedrock     # boto3 -> AWS Bedrock Converse
+poetry run terravision draw --source <path> --ai-annotate ollama      # local llama3 at localhost:11434
+poetry run terravision draw --source <path> --ai-annotate restapi     # OpenAI-compatible /v1/chat/completions
 
 # Export graph data
 poetry run terravision graphdata --source <path> --outfile graph.json
@@ -382,14 +383,18 @@ if "count.index" in zone and "~" in vm:
 
 ### AI Annotation Pipeline
 
-Two AI backends generate annotation files:
+Three AI backends generate annotation files:
 
-**Bedrock**: AWS API Gateway + Lambda + Bedrock (infrastructure in `ai-backend-terraform/`)
-**Ollama**: Local llama3 model (localhost:11434)
+**Bedrock**: AWS Bedrock Converse streaming API via `boto3`. Authenticates through the standard AWS credential chain (env vars, `~/.aws/credentials`, IAM role, SSO). Region defaults to `us-east-1` (override via `TV_BEDROCK_REGION`); model defaults to `us.anthropic.claude-haiku-4-5-20251001-v1:0` (override via `TV_BEDROCK_MODEL_ID`). No infrastructure to deploy — the previous API Gateway + Lambda proxy stack has been removed.
+
+**Ollama**: Local llama3 model (localhost:11434).
+
+**REST API**: Any OpenAI-compatible `/v1/chat/completions` endpoint with SSE streaming. Configured via `TV_RESTAPI_URL`, `TV_RESTAPI_KEY`, and `TV_RESTAPI_MODEL` (all required). Works with OpenAI, Anthropic via LiteLLM, vLLM, LM Studio, OpenRouter, or any custom proxy speaking the OpenAI schema.
 
 The old `refine_with_llm()` function and provider-specific `*_REFINEMENT_PROMPT` constants have been removed. They are replaced by:
 
 - **`generate_ai_annotations(tfdata, backend, source_dir)`** in `modules/llm.py`: Assembles a prompt from the graphdict and HCL context, streams the LLM response, validates resource references, and writes `terravision.ai.yml` with `generated_by` metadata. Uses a single `ANNOTATION_PROMPT` constant (not per-provider prompts). The deterministic graph is never modified by AI.
+- Three streamers: `_stream_ollama_text()`, `_stream_bedrock_text()` (boto3 `bedrock-runtime.converse_stream`), `_stream_restapi_text()` (OpenAI SSE). Three preflight checks: `check_ollama_server()`, `check_bedrock_credentials()` (calls `sts:GetCallerIdentity` so preflight needs no Bedrock IAM perms), `check_restapi_endpoint()`.
 
 ### Icon Libraries
 
