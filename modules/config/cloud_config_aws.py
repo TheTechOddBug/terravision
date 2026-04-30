@@ -465,4 +465,4 @@ OLLAMA_HOST = "http://localhost:11434"
 # pulled to the local Ollama server (`ollama pull <model>`). Any model
 # the server has installed is valid — llama3, mistral, qwen2.5,
 # llama3.1, etc.
-OLLAMA_MODEL = "codestral"
+OLLAMA_MODEL = "llama3"
