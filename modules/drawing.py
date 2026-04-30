@@ -1386,10 +1386,16 @@ def render_diagram(
             f.write(xml_content)
         click.echo(f"  Output file: {drawio_output}")
 
-        # Auto-open if --show flag is set
+        # Auto-open if --show flag is set. On WSL, click.launch's
+        # xdg-open fallback is broken, so route through wslview;
+        # everywhere else keep the original click.launch path.
         if picshow:
-            if not click.launch(str(drawio_output)):
-                # launch() returns False if no app is associated with .drawio
+            if helpers.is_wsl():
+                opened = helpers.wsl_open(str(drawio_output))
+            else:
+                opened = bool(click.launch(str(drawio_output)))
+            if not opened:
+                # No app associated with .drawio (or wslview missing).
                 click.echo(
                     "  No draw.io desktop app found. "
                     "Open https://app.diagrams.net and use File > Open "

@@ -32,7 +32,8 @@ poetry run pre-commit install
 Optional extras for AI-annotation work:
 
 - **Ollama** — for testing `--ai-annotate ollama` locally. See [Installation → Ollama](installation.md#optional-install-ollama-for-local-ai-refinement).
-- **AWS account with Bedrock access** — for testing `--ai-annotate bedrock`.
+- **AWS account with Bedrock access** — for testing `--ai-annotate bedrock`. Authentication uses the standard `boto3` credential chain, so any AWS-CLI-compatible setup works (env vars, `~/.aws/credentials`, IAM role, SSO). Region and model id are overridable via `TV_BEDROCK_REGION` and `TV_BEDROCK_MODEL_ID`.
+- **An OpenAI-compatible endpoint** — for testing `--ai-annotate restapi`. Set `TV_RESTAPI_URL`, `TV_RESTAPI_KEY`, and `TV_RESTAPI_MODEL` to point at OpenAI, an Anthropic-via-LiteLLM proxy, a local vLLM/LM Studio, or any custom shim that speaks the OpenAI chat-completions schema.
 
 ### Running Tests
 

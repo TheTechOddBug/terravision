@@ -1798,3 +1798,63 @@ def check_terraform_version() -> None:
             )
         )
         exit()
+
+
+_WSL_DETECTED: Optional[bool] = None
+
+
+def is_wsl() -> bool:
+    """Detect whether we're running under WSL (1 or 2).
+
+    Caches the result so repeated callers don't re-read /proc/version.
+    """
+    global _WSL_DETECTED
+    if _WSL_DETECTED is not None:
+        return _WSL_DETECTED
+    if os.environ.get("WSL_DISTRO_NAME") or os.environ.get("WSL_INTEROP"):
+        _WSL_DETECTED = True
+        return True
+    try:
+        _WSL_DETECTED = "microsoft" in Path("/proc/version").read_text().lower()
+    except OSError:
+        _WSL_DETECTED = False
+    return _WSL_DETECTED
+
+
+def wsl_open(path: Union[str, "Path"]) -> bool:
+    """Open a file/URL on WSL via ``wslview``.
+
+    WSL-only helper. Callers MUST gate this with ``is_wsl()`` and
+    keep their non-WSL opener (``click.launch``, ``webbrowser.open``,
+    Graphviz ``view=True``, etc.) for every other platform. We delegate
+    to ``wslview`` (from the ``wslu`` package) because Linux's normal
+    ``xdg-open`` lookup chain is broken on WSL — the WSL image has no
+    real desktop database, so xdg-open finds no handler. ``wslview``
+    calls back into Windows and uses the host's file associations.
+
+    Returns ``True`` on success, ``False`` if ``wslview`` is missing or
+    failed (a warning is printed in both cases).
+    """
+    target = str(path)
+    try:
+        subprocess.run(["wslview", target], check=True)
+        return True
+    except FileNotFoundError:
+        click.echo(
+            click.style(
+                "  WSL detected but `wslview` is not installed. "
+                "Install with: sudo apt install wslu",
+                fg="yellow",
+            ),
+            err=True,
+        )
+        return False
+    except subprocess.CalledProcessError as exc:
+        click.echo(
+            click.style(
+                f"  wslview failed to open {target}: {exc}",
+                fg="yellow",
+            ),
+            err=True,
+        )
+        return False

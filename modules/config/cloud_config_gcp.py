@@ -321,15 +321,6 @@ GCP_NAME_REPLACEMENTS = {
     "this": "",
 }
 
-GCP_DOCUMENTATION_PROMPT = """\
-You are a GCP architect that needs to summarise this JSON of Terraform GCP resources and their associations concisely in paragraph form using as few bullet points as possible. Follow these instructions:
-1. If you see ~1, ~2, ~3 etc at the end of the resource name it means multiple instances of the same resource are created. Include how many of each resource type are created in the summary.
-2. Use only GCP resource names in the text which can be inferred from terraform resource type names. e.g. instead of google_compute_instance.XXX just say a Compute Engine Instance named XXX
-3. Mention which resources are associated with each respective Project, VPC, Subnet, and Zone if any.
-4. Provide an overall summary of the architecture and what the system does
-
-"""
-
 # Configuration patterns for multi-instance resource detection
 # Each pattern defines:
 # - resource_types: List of Terraform resource types to check
@@ -360,7 +351,8 @@ GCP_MULTI_INSTANCE_PATTERNS = [
 # Replace with your OLLAMA server IP and port number
 OLLAMA_HOST = "http://localhost:11434"
 
-# Replace with your actual API Gateway endpoint
-BEDROCK_API_ENDPOINT = (
-    "https://yirz70b5mc.execute-api.us-east-1.amazonaws.com/prod/chat"
-)
+# Default Ollama model used by --ai-annotate ollama. Must be already
+# pulled to the local Ollama server (`ollama pull <model>`). Any model
+# the server has installed is valid — llama3, mistral, qwen2.5,
+# llama3.1, etc.
+OLLAMA_MODEL = "llama3"

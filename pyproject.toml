@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "terravision"
-version = "0.38.1"
+version = "0.39.0"
 description = "Terraform Architecture Visualizer"
 readme = "README.md"
 authors = [{ name = "Patrick Chugh", email = "terravisionapp@gmail.com" }]
@@ -20,9 +20,10 @@ dependencies = [
     "debugpy>=1.8.0",
     "ipaddr>=2.2.0",
     "ollama>=0.6.1",
-    "requests>=2.32.3", 
+    "requests>=2.32.3",
     "typing-extensions>=4.0.0",
     "tomli>=2.0.1",
+    "boto3>=1.35.0",
 ]
 
 [project.scripts]
@@ -30,7 +31,7 @@ terravision = "terravision.terravision:main"
 
 [tool.poetry]
 name = "terravision"
-version = "0.38.1"
+version = "0.39.0"
 description = "Terraform Architecture Visualizer"
 authors = ["Patrick Chugh <terravisionapp@gmail.com>"]
 license = "AGPL-3.0-only"
@@ -64,6 +65,7 @@ ollama = "^0.6.1"
 requests = ">=2.32.3"
 typing-extensions = "^4.0.0"
 tomli = "^2.0.1"
+boto3 = ">=1.35.0"
 
 
 [tool.poetry.scripts]

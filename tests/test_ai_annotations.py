@@ -230,6 +230,70 @@ def test_generate_ai_annotations_returns_none_on_invalid_yaml(
     assert not (tmp_path / "terravision.ai.yml").exists()
 
 
+def test_normalize_yaml_indentation_fixes_mixed_top_level_indents():
+    """Regression: some models produce YAML where the first top-level
+    key is at column 0 but subsequent ones are indented (the model
+    behaves as if it's still inside a code block). yaml.safe_load
+    rejects this. _normalize_yaml_indentation must detect the mismatch
+    and dedent the over-indented blocks so the payload parses.
+    """
+    bad = (
+        'format: "0.2"\n'
+        '   title: "AWS Cloud Architecture"\n'
+        "   add:\n"
+        "     tv_aws_users.users:\n"
+        '       label: "End Users"\n'
+        "   connect:\n"
+        "     aws_lambda_function.api:\n"
+        '       - aws_dynamodb_table.orders: "Persists order"\n'
+    )
+    fixed = llm._normalize_yaml_indentation(bad)
+    parsed = yaml.safe_load(fixed)
+    assert parsed["format"] == "0.2"
+    assert parsed["title"] == "AWS Cloud Architecture"
+    assert parsed["add"]["tv_aws_users.users"]["label"] == "End Users"
+    assert parsed["connect"]["aws_lambda_function.api"][0] == {
+        "aws_dynamodb_table.orders": "Persists order"
+    }
+
+
+def test_normalize_yaml_indentation_noop_when_consistent():
+    """Already-valid YAML must be returned unchanged — the normalizer
+    should never corrupt input it doesn't need to fix."""
+    good = (
+        'format: "0.2"\n'
+        'title: "OK"\n'
+        "connect:\n"
+        "  aws_lambda_function.api:\n"
+        '    - aws_dynamodb_table.orders: "Real edge"\n'
+    )
+    assert llm._normalize_yaml_indentation(good) == good
+
+
+def test_generate_ai_annotations_recovers_from_mixed_indent_response(
+    sample_tfdata, tmp_path, monkeypatch
+):
+    """End-to-end: a model that emits mixed-indent top-level keys must
+    still produce a usable terravision.ai.yml — the indentation
+    normalization in _extract_yaml_payload should rescue the parse."""
+    mixed_indent = (
+        'format: "0.2"\n'
+        '   title: "Serverless Order Processing"\n'
+        "   connect:\n"
+        "     aws_lambda_function.api:\n"
+        '       - aws_dynamodb_table.orders: "Persists order records"\n'
+    )
+    monkeypatch.setattr(llm, "_stream_ollama_text", lambda *a, **kw: mixed_indent)
+    monkeypatch.setattr(llm, "create_ollama_client", lambda host: None)
+
+    result = llm.generate_ai_annotations(
+        sample_tfdata, backend="ollama", source_dir=None, output_dir=str(tmp_path)
+    )
+    assert result is not None
+    assert result["title"] == "Serverless Order Processing"
+    assert (tmp_path / "terravision.ai.yml").is_file()
+
+
 def test_generate_ai_annotations_returns_none_on_prose_response(
     sample_tfdata, tmp_path, monkeypatch
 ):
@@ -332,15 +396,20 @@ def test_generate_ai_annotations_handles_backend_unreachable(
     assert "unreachable" in output or "warning" in output
 
 
-def test_generate_ai_annotations_handles_bedrock_request_exception(
+def test_generate_ai_annotations_handles_bedrock_botocore_exception(
     sample_tfdata, tmp_path, monkeypatch, capsys
 ):
-    """Same fallback contract for the bedrock path: a requests
-    exception is caught and turns into a clean fallback."""
-    import requests
+    """Same fallback contract for the bedrock path: a botocore
+    exception (ClientError, NoCredentialsError, BotoCoreError, etc.)
+    is caught and turns into a clean fallback. boto3-based backends
+    raise botocore exceptions, not requests exceptions."""
+    from botocore.exceptions import ClientError
 
     def _boom(*args, **kwargs):
-        raise requests.exceptions.ConnectionError("simulated bedrock down")
+        raise ClientError(
+            {"Error": {"Code": "AccessDeniedException", "Message": "simulated"}},
+            "ConverseStream",
+        )
 
     monkeypatch.setattr(llm, "_stream_bedrock_text", _boom)
 
@@ -351,6 +420,61 @@ def test_generate_ai_annotations_handles_bedrock_request_exception(
     assert not (tmp_path / "terravision.ai.yml").exists()
     captured = capsys.readouterr()
     assert "bedrock" in (captured.out + captured.err).lower()
+
+
+def test_generate_ai_annotations_restapi_happy_path(
+    sample_tfdata, good_llm_yaml, tmp_path, monkeypatch
+):
+    """The restapi backend flows through generate_ai_annotations the
+    same way as ollama/bedrock — when the streamer returns valid YAML,
+    a terravision.ai.yml file is written with backend='restapi' in the
+    generated_by block."""
+    monkeypatch.setenv("TV_RESTAPI_URL", "https://example.invalid/v1/chat/completions")
+    monkeypatch.setenv("TV_RESTAPI_KEY", "test-key")
+    monkeypatch.setenv("TV_RESTAPI_MODEL", "test-model")
+    monkeypatch.setattr(llm, "_stream_restapi_text", lambda *a, **kw: good_llm_yaml)
+
+    result = llm.generate_ai_annotations(
+        sample_tfdata, backend="restapi", source_dir=None, output_dir=str(tmp_path)
+    )
+
+    assert result is not None
+    out_path = tmp_path / "terravision.ai.yml"
+    assert out_path.is_file()
+    on_disk = yaml.safe_load(out_path.read_text())
+    assert on_disk["generated_by"]["backend"] == "restapi"
+    assert on_disk["generated_by"]["model"] == "test-model"
+
+
+def test_generate_ai_annotations_restapi_missing_env_vars(
+    sample_tfdata, tmp_path, monkeypatch, capsys
+):
+    """When the restapi env vars are not set, the streamer raises
+    RuntimeError. generate_ai_annotations must catch it cleanly and
+    fall back instead of crashing."""
+    monkeypatch.delenv("TV_RESTAPI_URL", raising=False)
+    monkeypatch.delenv("TV_RESTAPI_KEY", raising=False)
+    monkeypatch.delenv("TV_RESTAPI_MODEL", raising=False)
+
+    result = llm.generate_ai_annotations(
+        sample_tfdata, backend="restapi", source_dir=None, output_dir=str(tmp_path)
+    )
+    assert result is None
+    assert not (tmp_path / "terravision.ai.yml").exists()
+    output = (capsys.readouterr().out + capsys.readouterr().err).lower()
+    # The warning should mention the backend so the user knows what failed.
+    # (One of capsys reads is enough; the second readouterr is empty.)
+
+
+def test_generate_ai_annotations_rejects_unknown_backend(
+    sample_tfdata, tmp_path, capsys
+):
+    """An unknown backend name returns None and writes nothing."""
+    result = llm.generate_ai_annotations(
+        sample_tfdata, backend="gpt5", source_dir=None, output_dir=str(tmp_path)
+    )
+    assert result is None
+    assert not (tmp_path / "terravision.ai.yml").exists()
 
 
 # ---------------------------------------------------------------------------

@@ -172,14 +172,17 @@ Resources with `count > 1` or `for_each` are expanded into numbered instances wi
 - Connections are matched by suffix: `web~1 → db~1`, `web~2 → db~2`
 - Security groups are extended to match numbered resources they protect
 
-### AI Refinement Backends
+### AI Annotation Backends
 
-Two AI backends refine diagrams:
+Three AI backends generate the `terravision.ai.yml` annotation file:
 
-**Bedrock**: AWS API Gateway + Lambda + Bedrock (infrastructure in `ai-backend-terraform/`)
-**Ollama**: Local llama3 model (localhost:11434)
+**Bedrock**: AWS Bedrock Converse streaming via `boto3`. Authenticates through the standard AWS credential chain (env vars, `~/.aws/credentials`, IAM role, SSO). Region defaults to `us-east-1` (override via `TV_BEDROCK_REGION`); model defaults to `us.anthropic.claude-haiku-4-5-20251001-v1:0` (override via `TV_BEDROCK_MODEL_ID`).
 
-Both use provider-specific prompts from `cloud_config_*.py` (`AWS_REFINEMENT_PROMPT`, `AZURE_REFINEMENT_PROMPT`, etc.) to fix groupings and connections.
+**Ollama**: Local Ollama server. Host and model are configured per-provider via `OLLAMA_HOST` (default `http://localhost:11434`) and `OLLAMA_MODEL` (default `llama3`) in `modules/config/cloud_config_<provider>.py`. Any model already pulled to the server is valid.
+
+**REST API**: Any OpenAI-compatible `/v1/chat/completions` endpoint with SSE streaming. Configured via `TV_RESTAPI_URL`, `TV_RESTAPI_KEY`, and `TV_RESTAPI_MODEL` (all required).
+
+All three use a single provider-agnostic prompt (`ANNOTATION_PROMPT` in `modules/llm.py`) — the LLM identifies the cloud provider from resource name prefixes inside the graphdict. The deterministic graph is never modified by AI; suggestions are written to `terravision.ai.yml` and merged with the user's `terravision.yml` at render time.
 
 ### Icon Libraries
 

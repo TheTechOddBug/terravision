@@ -193,6 +193,22 @@ source venv/bin/activate
 pip install terravision
 ```
 
+#### `--show` doesn't open the diagram on WSL
+
+**Problem**: Running TerraVision under Windows Subsystem for Linux with `--show`, the diagram is generated successfully but no viewer opens. You may also see an error from `xdg-open` about no application being registered for the file type, or a warning that says `WSL detected but wslview is not installed`.
+
+**Cause**: WSL ships without a Linux desktop database, so the standard `xdg-open` resolver has no `.desktop` files to consult and can't pick a handler.
+
+**Solution**: Install the `wslu` package, which provides `wslview` — a tool that delegates the open back to Windows so the host's file associations are used:
+
+```bash
+sudo apt install wslu
+```
+
+TerraVision automatically detects WSL at runtime and routes `--show` through `wslview` once it's available; no further configuration is needed. The diagram itself is always generated correctly regardless — `--show` only controls auto-opening.
+
+If you'd rather not install `wslu`, omit `--show` and open the output file from Windows Explorer (everything under `\\wsl$\<distro>\...` is reachable from Windows) or directly from your IDE.
+
 ---
 
 ### Pre-Generated Plan File Issues
@@ -346,7 +362,8 @@ ollama serve
 lsof -ti:11434 | xargs kill -9
 ollama serve
 
-# Verify llama3 model is installed
+# Verify the configured model is installed (default is llama3 —
+# whatever you set in OLLAMA_MODEL inside cloud_config_<provider>.py)
 ollama list
 ollama pull llama3
 ```

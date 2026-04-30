@@ -6,7 +6,8 @@
 - **Terraform 1.x** (v1.0.0 or higher) — not required when using `--planfile` mode
 - **Git**
 - **Graphviz**
-- **Ollama** (Optional - only for local AI refinement)
+- **Ollama** (Optional — only for local AI refinement)
+- **wslu** (Optional — required only on WSL if you use `--show` to auto-open diagrams)
 
 > **Note**: If you use the `--planfile` and `--graphfile` options to provide pre-generated Terraform outputs, Terraform itself does not need to be installed. Only Python, Graphviz, and Git are required. See the [Usage Guide](usage-guide.md#pre-generated-plan-input) for details.
 
@@ -67,6 +68,18 @@ Download from https://developer.hashicorp.com/terraform/downloads
 terraform version
 # Must show v1.0.0 or higher
 ```
+
+### WSL (Windows Subsystem for Linux)
+
+If you run TerraVision under WSL **and** intend to use the `--show` flag to auto-open generated diagrams, install `wslu`:
+
+```bash
+sudo apt install wslu
+```
+
+**Why:** WSL ships without a real Linux desktop, so the standard `xdg-open` lookup chain has no application database to consult and fails silently. The `wslu` package provides `wslview`, which calls back into Windows and uses your host file associations (PNG → Photos, SVG → browser, etc.). TerraVision automatically detects WSL at runtime and routes opens through `wslview`; without it the diagram still gets generated correctly, you just have to open the file yourself.
+
+If `wslu` isn't installed, TerraVision prints a one-line `sudo apt install wslu` hint when `--show` is used. You can also skip `--show` entirely and open the output file from Windows Explorer or your editor.
 
 ---
 
@@ -265,7 +278,7 @@ Download from https://ollama.com/download
 # Start Ollama server (runs automatically on macOS/Linux after install)
 ollama serve
 
-# Pull the llama3 model
+# Pull the default model (llama3)
 ollama pull llama3
 
 # Optional: Keep model loaded longer (default is 5 minutes)
@@ -274,6 +287,8 @@ export OLLAMA_KEEP_ALIVE=1h
 # Verify Ollama is running
 curl http://localhost:11434/api/tags
 ```
+
+**Using a different model:** Edit `OLLAMA_MODEL` in `modules/config/cloud_config_<provider>.py` (default `llama3`) to any tag you've pulled — `llama3.1`, `mistral`, `qwen2.5`, etc. Make sure the corresponding `ollama pull <model>` has been run first, otherwise the first chat call will return 404 and TerraVision falls back to non-AI rendering.
 
 ---
 

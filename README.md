@@ -128,11 +128,12 @@ terravision draw --planfile plan.json --graphfile graph.dot --source ./path-to-y
 ### AI-powered annotations (optional)
 
 ```bash
-terravision draw --source ./path-to-your-terraform --ai-annotate ollama   # local LLM
-terravision draw --source ./path-to-your-terraform --ai-annotate bedrock  # AWS Bedrock
+terravision draw --source ./path-to-your-terraform --ai-annotate ollama   # local LLM (no data leaves your machine)
+terravision draw --source ./path-to-your-terraform --ai-annotate bedrock  # AWS Bedrock via boto3 (uses your AWS credentials)
+terravision draw --source ./path-to-your-terraform --ai-annotate restapi  # any OpenAI-compatible endpoint (OpenAI, LiteLLM, vLLM, ...)
 ```
 
-Only metadata and the summary graph are sent to the LLM — never your `.tf` source. See [Annotations Guide](https://patrickchugh.github.io/terravision/annotations/).
+Only metadata and the summary graph are sent to the LLM — never your `.tf` source. The `bedrock` backend authenticates via the standard AWS credential chain (no infrastructure to deploy); `restapi` is configured via `TV_RESTAPI_URL`, `TV_RESTAPI_KEY`, and `TV_RESTAPI_MODEL`. See the [Annotations Guide](https://patrickchugh.github.io/terravision/annotations/) and [AI-Powered Annotations](https://patrickchugh.github.io/terravision/usage-guide/#ai-powered-annotations) for the full configuration.
 
 ### Simplified view
 
@@ -155,7 +156,7 @@ Strips VPCs, subnets, and networking plumbing. Great for executive presentations
 | `--varfile`     | Variable file (repeatable)                                                 | `prod.tfvars`                       |
 | `--planfile`    | Pre-generated plan JSON                                                    | `plan.json`                         |
 | `--graphfile`   | Pre-generated graph DOT                                                    | `graph.dot`                         |
-| `--ai-annotate` | AI annotation backend                                                      | `ollama`, `bedrock`                 |
+| `--ai-annotate` | AI annotation backend                                                      | `ollama`, `bedrock`, `restapi`      |
 | `--simplified`  | High-level view (no networking)                                            | (flag)                              |
 | `--show`        | Open after generation                                                      | (flag)                              |
 

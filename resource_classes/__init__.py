@@ -256,10 +256,20 @@ class Canvas:
             self.filename + ".dot", engine=self.engine, directory=Path.cwd()
         )
 
-        # Rendering configuration
+        # Local import to avoid a circular import (helpers may
+        # transitively import from resource_classes in some paths).
+        from modules.helpers import is_wsl, wsl_open
+
+        on_wsl = is_wsl()
+
+        # Rendering configuration. On WSL we force view=False because
+        # graphviz's view=True path calls xdg-open, whose lookup chain
+        # is broken on WSL (no desktop database). Everywhere else we
+        # keep the original behavior — graphviz handles the open via
+        # macOS `open` / Windows `os.startfile` / Linux `xdg-open`.
         render_kwargs = {
             "format": self.outformat,
-            "view": self.show,
+            "view": False if on_wsl else self.show,
             "quiet": True,
             "engine": self.engine,
             "directory": Path.cwd(),
@@ -270,6 +280,13 @@ class Canvas:
             render_kwargs["neato_no_op"] = 2
 
         filename = dotsource.render(**render_kwargs)
+
+        # WSL fork: graphviz didn't open the file, so do it ourselves
+        # via wslview. Non-WSL platforms already opened it inside
+        # dotsource.render() above (when self.show is True).
+        if on_wsl and self.show:
+            wsl_open(filename)
+
         return filename
 
 
