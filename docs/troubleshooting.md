@@ -362,7 +362,8 @@ ollama serve
 lsof -ti:11434 | xargs kill -9
 ollama serve
 
-# Verify llama3 model is installed
+# Verify the configured model is installed (default is llama3 —
+# whatever you set in OLLAMA_MODEL inside cloud_config_<provider>.py)
 ollama list
 ollama pull llama3
 ```

@@ -10,8 +10,10 @@ winning on conflict.
 
 Three backends are supported:
 
-  * ``ollama``  — local llama3 (or any model) via the Ollama HTTP API
-    on ``localhost:11434``. Air-gapped / private path.
+  * ``ollama``  — local Ollama HTTP API. Server URL and model are
+    configured per-provider via ``OLLAMA_HOST`` and ``OLLAMA_MODEL`` in
+    ``modules/config/cloud_config_<provider>.py`` (defaults
+    ``http://localhost:11434`` and ``llama3``). Air-gapped / private path.
   * ``bedrock`` — AWS Bedrock Converse streaming via ``boto3``,
     authenticated through the standard AWS credential chain (env vars,
     ``~/.aws/credentials``, IAM role, SSO). Region and model id are
@@ -229,15 +231,15 @@ def create_ollama_client(ollama_host: str) -> ollama.Client:
 # ---------------------------------------------------------------------------
 
 ANNOTATION_PROMPT = """\
-You annotate an existing cloud architecture diagram. You will be given
-TWO allow-lists below: a list of resource names and a list of edges.
+You are to annotate an existing cloud architecture diagram represented in text. You will be given
+TWO allow-lists below: a list of mostly Terraform resource names and a list of edges.
 Your job is to produce a YAML annotation file that adds a TITLE,
 short LABELS to existing edges, and optionally one or two external
 ACTORS connected to entry-point resources. You MUST NOT redraw the
 diagram or invent any name not in the allow-lists.
 
 ================================================================
-ALLOW-LIST 1 — RESOURCE NAMES
+ALLOW-LIST 1 — TERRAFORM RESOURCE NAMES
 Every resource identifier you write must be COPIED EXACTLY from
 this list. Do not shorten. Do not invent prettier local names. Do
 not strip "module." prefixes or "[0]~1" suffixes. The local part
@@ -275,6 +277,43 @@ registered icons:
 {actors}
 
 ================================================================
+ENTRY POINT RULE — when you draw a new edge from an actor
+================================================================
+The `add` section is the ONLY exception to ALLOW-LIST 2. Any
+other invented edge — actor or not — will be silently dropped, so
+do not waste output on connections that are not in ALLOW-LIST 2.
+Use the actor exception carefully:
+
+  - Connect each external actor to AT MOST ONE existing resource:
+    the FRONTMOST public-facing entry point in the request path.
+    Do NOT add multiple actor→resource edges, even if several
+    resources look "public".
+
+  - Walk the architecture from outside in and stop at the first
+    match present in ALLOW-LIST 1, in this priority order:
+
+      1. DNS / domain service
+      2. Content delivery network (CDN) / front door
+      3. API gateway / GraphQL endpoint
+      4. Public-facing load balancer
+      5. None — if no public-facing entry point exists in the
+         allow-list, do NOT add a user actor at all. A diagram
+         with no user node is better than one with a misleading
+         edge.
+
+  - If a CDN sits in front of a load balancer, the actor connects
+    to the CDN ONLY — the load balancer is behind the CDN and is
+    not a direct user endpoint. The same principle applies to any
+    "frontdoor → backdoor" chain: connect to the frontmost
+    service, never anything further down the chain.
+
+The principle is provider-agnostic: identify the role each
+allow-listed resource plays (DNS / CDN / gateway / load balancer
+/ internal) from its name and pick the topmost that exists. Do
+not encode any single cloud's resource-type names into your
+reasoning.
+
+================================================================
 OUTPUT FORMAT — the YAML you must produce
 ================================================================
 Return ONLY a YAML document. No prose. No code fences. No JSON.
@@ -285,8 +324,8 @@ block (the caller adds that).
 format: "0.2"
 title: "Concise architecture title (max 80 chars)"
 add:
-  tv_aws_users.users:
-    label: "End Users / Web Browsers"
+  <actor identifier copied from EXTERNAL ACTORS list above>:
+    label: "Short human-readable description (e.g. End Users / Web Browsers)"
 connect:
   <source name copied from ALLOW-LIST 1>:
     - <target name copied from ALLOW-LIST 1>: "Short verb-phrase label"
@@ -294,7 +333,7 @@ flows:                          # optional, omit if no clear request path
   user-request:
     description: "End-user request flow"
     steps:
-      - resource: tv_aws_users.users
+      - resource: <actor identifier copied from EXTERNAL ACTORS list above>
         xlabel: "Request"
         detail: "User issues HTTPS request"
       - resource: <name copied from ALLOW-LIST 1>
@@ -313,6 +352,23 @@ FINAL CHECKLIST — re-read these rules before you start writing
 4. The title reflects the actual architecture pattern, not a
    generic placeholder.
 5. You output 5–15 high-signal labels, not one for every edge.
+
+REMEMBER THIS IMPORTANT INSTRUCTION: never invent a name not in
+the list above. The most common ways models accidentally invent
+names:
+
+  - Writing the brand or marketing name of a service instead of
+    the actual Terraform resource type from the allow-list.
+  - Dropping ``module.`` prefixes, ``~N`` numbered-instance
+    suffixes, or ``[N]`` index suffixes.
+  - Replacing local names like ``.this`` or ``.main`` with a
+    friendlier-sounding invented name.
+  - Translating a name from one cloud provider's vocabulary to
+    another.
+
+If a resource you want to reference is not in ALLOW-LIST 1, do
+not reference it — it is not part of this architecture and any
+label you write referencing it will be silently dropped.
 
 Now produce the YAML:
 """
@@ -478,9 +534,15 @@ def _extract_context_block(
 def _stream_ollama_text(
     client: ollama.Client,
     prompt: str,
-    model: str = "llama3",
+    model: str,
 ) -> str:
-    """Stream a chat completion from Ollama and return the full string."""
+    """Stream a chat completion from Ollama and return the full string.
+
+    The model is resolved by the caller from the provider config
+    (``OLLAMA_MODEL``) — there is no fallback default here so a
+    misconfigured provider config fails loudly instead of silently
+    requesting llama3.
+    """
     stream = client.chat(
         model=model,
         keep_alive=-1,
@@ -599,21 +661,101 @@ def _stream_restapi_text(prompt: str) -> str:
 # Match an optional ```yaml fence so we tolerate models that wrap output.
 _YAML_FENCE_RE = re.compile(r"```(?:yaml|yml)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 
+# Top-level keys we recognise in the annotation schema. Used both to
+# locate the start of the payload (skipping prose preamble) and to
+# detect / repair inconsistent top-level indentation in model output.
+_TOP_LEVEL_KEYS = (
+    "format:",
+    "title:",
+    "add:",
+    "connect:",
+    "disconnect:",
+    "update:",
+    "remove:",
+    "flows:",
+)
+
+
+def _normalize_yaml_indentation(payload: str) -> str:
+    """Repair inconsistent top-level indentation produced by some models.
+
+    Some LLMs emit annotation YAML where top-level keys are at different
+    indents — e.g. ``format:`` at column 0 but ``title:`` and ``add:`` at
+    column 3 (the model behaves as if it's still inside a code block).
+    ``yaml.safe_load`` rejects this with "expected <block end>, but
+    found <block mapping start>".
+
+    We detect the mismatch by scanning for top-level keys, and if they
+    appear at differing columns we treat the minimum column as canonical
+    and dedent each over-indented block (top-level key + its children)
+    by the difference. Lines without enough leading whitespace to dedent
+    safely are left untouched.
+
+    No-op when indentation is already consistent — safe to call
+    unconditionally on every payload.
+    """
+    if not payload:
+        return payload
+    lines = payload.splitlines()
+
+    # Locate every top-level key and its column.
+    key_positions: List[Tuple[int, int]] = []
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        if any(stripped.startswith(k) for k in _TOP_LEVEL_KEYS):
+            indent = len(line) - len(stripped)
+            key_positions.append((i, indent))
+
+    if not key_positions:
+        return payload
+    indents = {ind for _, ind in key_positions}
+    if len(indents) <= 1:
+        return payload  # Already consistent — nothing to do.
+
+    canonical = min(indents)
+
+    # Walk each block (top-level key → next top-level key) and dedent
+    # over-indented blocks down to the canonical column.
+    fixed = list(lines)
+    for pos_idx, (line_idx, indent) in enumerate(key_positions):
+        delta = indent - canonical
+        if delta <= 0:
+            continue
+        end_idx = (
+            key_positions[pos_idx + 1][0]
+            if pos_idx + 1 < len(key_positions)
+            else len(lines)
+        )
+        for j in range(line_idx, end_idx):
+            line = fixed[j]
+            if line.startswith(" " * delta):
+                fixed[j] = line[delta:]
+            # else: blank or under-indented → leave alone, can't safely
+            # dedent without risking corrupting the structure.
+
+    return "\n".join(fixed)
+
 
 def _extract_yaml_payload(raw: str) -> str:
-    """Strip code fences / leading prose so yaml.safe_load can parse it."""
+    """Strip code fences / leading prose so yaml.safe_load can parse it.
+
+    Also normalises top-level indentation (see
+    ``_normalize_yaml_indentation``) so payloads from models that emit
+    inconsistent column alignment still parse.
+    """
     if not raw:
         return ""
     fence = _YAML_FENCE_RE.search(raw)
     if fence:
-        return fence.group(1).strip()
+        return _normalize_yaml_indentation(fence.group(1).strip())
     # Otherwise drop everything before the first `format:` or top-level key.
     lines = raw.splitlines()
     for i, line in enumerate(lines):
         stripped = line.strip()
-        if stripped.startswith(("format:", "title:", "add:", "connect:", "flows:")):
-            return "\n".join(lines[i:]).strip()
-    return raw.strip()
+        if stripped.startswith(_TOP_LEVEL_KEYS):
+            payload = "\n".join(lines[i:]).strip()
+            return _normalize_yaml_indentation(payload)
+    return _normalize_yaml_indentation(raw.strip())
 
 
 _TOP_LEVEL_REF_KEYS = ("connect", "disconnect", "update")
@@ -786,15 +928,22 @@ def _validate_against_graphdict(
 # ---------------------------------------------------------------------------
 
 
-def _resolve_model_identifier(backend: str) -> str:
+def _resolve_model_identifier(
+    backend: str, ollama_model: Optional[str] = None
+) -> str:
     """Best-effort identification of the model in use.
 
     Used in the ``generated_by`` provenance block so users can see what
     produced the output and reproduce results across runs.
+
+    For ``ollama`` the caller passes the resolved ``OLLAMA_MODEL`` from
+    the provider config. For ``bedrock`` and ``restapi`` the model is
+    pulled from the same env vars the streamers read, so provenance
+    matches the request.
     """
     backend_lower = backend.lower()
     if backend_lower == "ollama":
-        return "llama3"
+        return ollama_model or "unknown"
     if backend_lower == "bedrock":
         return _bedrock_model_id()
     if backend_lower == "restapi":
@@ -981,11 +1130,15 @@ def generate_ai_annotations(
         )
     )
 
+    # Resolve provider-config-driven Ollama settings up-front so the same
+    # value flows into the streamer and the provenance block.
+    ollama_model = getattr(config, "OLLAMA_MODEL", "llama3")
+
     raw_response = ""
     try:
         if backend_lower == "ollama":
             client = create_ollama_client(config.OLLAMA_HOST)
-            raw_response = _stream_ollama_text(client, prompt)
+            raw_response = _stream_ollama_text(client, prompt, ollama_model)
         elif backend_lower == "bedrock":
             raw_response = _stream_bedrock_text(prompt)
         else:  # restapi
@@ -1072,7 +1225,7 @@ def generate_ai_annotations(
     cleaned.setdefault("format", "0.2")
     cleaned["generated_by"] = {
         "backend": backend_lower,
-        "model": _resolve_model_identifier(backend_lower),
+        "model": _resolve_model_identifier(backend_lower, ollama_model),
         "timestamp": _utc_timestamp(),
     }
 

@@ -43,7 +43,7 @@ poetry run terravision draw --source <path>
 
 # With AI annotation generation (three backends supported)
 poetry run terravision draw --source <path> --ai-annotate bedrock     # boto3 -> AWS Bedrock Converse
-poetry run terravision draw --source <path> --ai-annotate ollama      # local llama3 at localhost:11434
+poetry run terravision draw --source <path> --ai-annotate ollama      # local Ollama (host + model from cloud_config_<provider>.py)
 poetry run terravision draw --source <path> --ai-annotate restapi     # OpenAI-compatible /v1/chat/completions
 
 # Export graph data
@@ -387,7 +387,7 @@ Three AI backends generate annotation files:
 
 **Bedrock**: AWS Bedrock Converse streaming API via `boto3`. Authenticates through the standard AWS credential chain (env vars, `~/.aws/credentials`, IAM role, SSO). Region defaults to `us-east-1` (override via `TV_BEDROCK_REGION`); model defaults to `us.anthropic.claude-haiku-4-5-20251001-v1:0` (override via `TV_BEDROCK_MODEL_ID`). No infrastructure to deploy — the previous API Gateway + Lambda proxy stack has been removed.
 
-**Ollama**: Local llama3 model (localhost:11434).
+**Ollama**: Local Ollama server. Host and model are configured per-provider via `OLLAMA_HOST` (default `http://localhost:11434`) and `OLLAMA_MODEL` (default `llama3`) in `modules/config/cloud_config_<provider>.py`. Any model already pulled to the server is valid.
 
 **REST API**: Any OpenAI-compatible `/v1/chat/completions` endpoint with SSE streaming. Configured via `TV_RESTAPI_URL`, `TV_RESTAPI_KEY`, and `TV_RESTAPI_MODEL` (all required). Works with OpenAI, Anthropic via LiteLLM, vLLM, LM Studio, OpenRouter, or any custom proxy speaking the OpenAI schema.
 

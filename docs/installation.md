@@ -278,7 +278,7 @@ Download from https://ollama.com/download
 # Start Ollama server (runs automatically on macOS/Linux after install)
 ollama serve
 
-# Pull the llama3 model
+# Pull the default model (llama3)
 ollama pull llama3
 
 # Optional: Keep model loaded longer (default is 5 minutes)
@@ -287,6 +287,8 @@ export OLLAMA_KEEP_ALIVE=1h
 # Verify Ollama is running
 curl http://localhost:11434/api/tags
 ```
+
+**Using a different model:** Edit `OLLAMA_MODEL` in `modules/config/cloud_config_<provider>.py` (default `llama3`) to any tag you've pulled — `llama3.1`, `mistral`, `qwen2.5`, etc. Make sure the corresponding `ollama pull <model>` has been run first, otherwise the first chat call will return 404 and TerraVision falls back to non-AI rendering.
 
 ---
 

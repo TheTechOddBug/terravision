@@ -432,7 +432,14 @@ export TV_RESTAPI_MODEL=meta-llama/Llama-3.1-8B-Instruct
 poetry run terravision draw --source ./infra --ai-annotate restapi
 ```
 
-**`ollama`** — no environment variables; the server URL is hard-coded to `http://localhost:11434`. Edit `OLLAMA_HOST` in `modules/config/cloud_config_<provider>.py` if you need to point at a remote Ollama.
+**`ollama`** — no environment variables. Server URL and model are configured per-provider via constants in `modules/config/cloud_config_<provider>.py`:
+
+| Constant | Default | Description |
+|---|---|---|
+| `OLLAMA_HOST` | `http://localhost:11434` | Ollama server URL. Change to point at a remote Ollama instance |
+| `OLLAMA_MODEL` | `llama3` | Model tag to invoke. Must already be pulled on the server (`ollama pull <model>`). Any installed model works — `llama3.1`, `mistral`, `qwen2.5`, etc. |
+
+The constants are duplicated across the three provider configs (`cloud_config_aws.py`, `cloud_config_azure.py`, `cloud_config_gcp.py`); update all three if you want a consistent default regardless of which cloud provider is detected in the source.
 
 #### How it works
 

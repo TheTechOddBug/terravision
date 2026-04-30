@@ -80,6 +80,18 @@ export TV_RESTAPI_MODEL=meta-llama/Llama-3.1-8B-Instruct
 terravision draw --source ./infra --ai-annotate restapi
 ```
 
+### Configurable Ollama model (`OLLAMA_MODEL`)
+
+The `--ai-annotate ollama` model is no longer hardcoded to `llama3`. It is now read from a new `OLLAMA_MODEL` constant in each `modules/config/cloud_config_<provider>.py` (default: `llama3`), matching the existing `OLLAMA_HOST` pattern. Any model already pulled to your Ollama server is valid — `llama3.1`, `mistral`, `qwen2.5`, `gemma2`, etc.
+
+```python
+# modules/config/cloud_config_aws.py (and azure / gcp)
+OLLAMA_HOST = "http://localhost:11434"
+OLLAMA_MODEL = "llama3"        # change to any tag pulled on the server
+```
+
+The selected model is recorded in the `generated_by` block of `terravision.ai.yml` so provenance reflects what actually ran.
+
 ### WSL detection for `--show`
 
 TerraVision now auto-detects WSL at runtime and routes diagram opens through `wslview` (from the `wslu` package) instead of the broken `xdg-open` lookup chain that ships in WSL images by default. This affects all three opener call sites equally:
