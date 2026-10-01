@@ -1,0 +1,1791 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons.">
+      
+      
+      
+        <link rel="canonical" href="https://patrickchugh.github.io/terravision/graph-format/">
+      
+      
+        <link rel="prev" href="../ai-assistants/">
+      
+      
+        <link rel="next" href="../node-types/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Graph Format (JSON input) - TerraVision</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#terravision-graph-format-tvg" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="TerraVision" class="md-header__button md-logo" aria-label="TerraVision" data-md-component="logo">
+      
+  <img src="../assets/logo/terravision-icon.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            TerraVision
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Graph Format (JSON input)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard="" data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"></path></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/patrickchugh/terravision" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    patrickchugh/terravision
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../ai-assistants/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Use with AI assistants
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Graph Format (JSON input)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../node-types/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Node types
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../annotations/" class="md-tabs__link">
+          
+  
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../faq/" class="md-tabs__link">
+          
+  
+  
+  Help
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
+          
+  
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../demo-aws.html" class="md-tabs__link">
+          
+  
+  
+  Live Demos
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="TerraVision" class="md-nav__button md-logo" aria-label="TerraVision" data-md-component="logo">
+      
+  <img src="../assets/logo/terravision-icon.svg" alt="logo">
+
+    </a>
+    TerraVision
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/patrickchugh/terravision" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    patrickchugh/terravision
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-assistants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use with AI assistants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Format (JSON input)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Format (JSON input)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#the-format-in-one-paragraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The format in one paragraph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File extension
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drawn-as-written" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drawn as written
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-not-mermaid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why not Mermaid?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-graph-from-real-infrastructure-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting the graph from real infrastructure instead
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../node-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6">
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../annotations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cicd-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://patrickchugh.github.io/terravision/llms.txt" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    llms.txt for AI agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7">
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8">
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-handler-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Handler Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../constitution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Constitution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9">
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live Demos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Live Demos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-aws.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AWS Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-azure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Azure Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-gcp.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCP Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#the-format-in-one-paragraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The format in one paragraph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File extension
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drawn-as-written" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drawn as written
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-not-mermaid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why not Mermaid?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-graph-from-real-infrastructure-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting the graph from real infrastructure instead
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/graph-format.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
+    </a>
+  
+  
+
+
+<h1 id="terravision-graph-format-tvg">TerraVision Graph Format (TVG)<a class="headerlink" href="#terravision-graph-format-tvg" title="Permanent link">¶</a></h1>
+<p>TerraVision can draw a professional cloud architecture diagram from a plain JSON file, with no Terraform code and no cloud credentials. This is the fastest way for a person or an AI agent to get a diagram that uses the official AWS, Azure and GCP icon sets and industry-standard grouping (VPCs, subnets, resource groups, regions, zones).</p>
+<p>Schema: <code>https://patrickchugh.github.io/terravision/schemas/terravision-graph-1.0.schema.json</code></p>
+<h2 id="the-format-in-one-paragraph">The format in one paragraph<a class="headerlink" href="#the-format-in-one-paragraph" title="Permanent link">¶</a></h2>
+<p>A TVG file is a JSON object. Each key is a <strong>node address</strong>, <code>&lt;type&gt;.&lt;name&gt;</code>, where <code>&lt;type&gt;</code> is a Terraform resource type such as <code>aws_lambda_function</code>, <code>azurerm_key_vault</code> or <code>google_cloud_run_service</code>, and <code>&lt;name&gt;</code> is any label you like. Each value is the <strong>list of node addresses that node connects to or contains</strong>. That is the whole format.</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"tv_aws_users.users"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_cloudfront_distribution.cdn"</span><span class="p">],</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"aws_cloudfront_distribution.cdn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_s3_bucket.static_site"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"aws_vpc.main"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_subnet.public~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.private~1"</span><span class="p">],</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"aws_subnet.public~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"aws_subnet.private~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"aws_alb.api"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">"aws_lambda_function.orders"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_dynamodb_table.orders"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_sqs_queue.events"</span><span class="p">]</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Render it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--format<span class="w"> </span>svg<span class="w">     </span><span class="c1"># also png, pdf, dot, drawio</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--title<span class="w"> </span><span class="s2">"Order Platform - Production"</span>
+</span></code></pre></div>
+<p>Only Graphviz and Git are required for this mode, the same minimum as every TerraVision command. Terraform is not invoked and does not need to be installed.</p>
+<h2 id="file-extension">File extension<a class="headerlink" href="#file-extension" title="Permanent link">¶</a></h2>
+<p>Save TVG files with the <code>.tvg.json</code> extension, for example <code>architecture.tvg.json</code>. It is still a JSON file, so every editor and JSON tool handles it, and the <code>.tvg</code> part marks it as a TerraVision Graph. TerraVision also accepts any other file ending in <code>.json</code>. <code>terravision graphdata</code> and the MCP <code>render_graph</code> tool both write <code>.tvg.json</code> files.</p>
+<h2 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">¶</a></h2>
+<ol>
+<li>
+<p><strong>Node address</strong> = <code>&lt;type&gt;.&lt;name&gt;</code>. The type picks the icon. See <a href="../node-types/">node-types.md</a> for the full list; unknown types, including misspelt ones, get a generic icon for their provider without any error. Pick the specific type where Terraform has a generic one, because a graph file carries no attributes to refine it:</p>
+<table>
+<thead>
+<tr>
+<th>For</th>
+<th>Use</th>
+<th>Not</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Application / Network Load Balancer</td>
+<td><code>aws_alb</code>, <code>aws_nlb</code></td>
+<td><code>aws_lb</code> (generic Elastic Load Balancing icon)</td>
+</tr>
+<tr>
+<td>ECS on Fargate</td>
+<td><code>aws_ecs_fargate</code></td>
+<td><code>aws_ecs_service</code> (generic ECS icon)</td>
+</tr>
+<tr>
+<td>RDS by engine</td>
+<td><code>aws_rds_postgres</code>, <code>aws_rds_mysql</code>, <code>aws_rds_sqlserver</code>, <code>aws_rds_oracle</code>, <code>aws_rds_mariadb</code>, <code>aws_rds_aurora</code></td>
+<td><code>aws_db_instance</code> (generic RDS icon)</td>
+</tr>
+<tr>
+<td>EKS cluster</td>
+<td><code>aws_eks_service</code></td>
+<td><code>aws_eks_cluster</code> (draws EC2 instances)</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>Connections vs containment.</strong> If the source node is a container, its targets are drawn <em>inside</em> it. Otherwise an arrow is drawn from source to target. Container types:</p>
+<ul>
+<li>AWS: <code>aws_vpc</code>, <code>aws_subnet</code>, <code>tv_aws_az</code> (the older name <code>aws_az</code> also works), <code>aws_security_group</code>, <code>aws_autoscaling_group</code>, <code>aws_appautoscaling_target</code>, <code>aws_group</code>, <code>aws_account</code>, <code>tv_aws_region</code>, <code>tv_aws_onprem</code></li>
+<li>Azure: <code>azurerm_resource_group</code>, <code>azurerm_virtual_network</code>, <code>azurerm_subnet</code>, <code>azurerm_group</code>, <code>tv_azurerm_region</code>, <code>tv_azurerm_zone</code>, <code>tv_azure_onprem</code></li>
+<li>GCP: <code>google_project</code>, <code>google_compute_network</code>, <code>google_compute_subnetwork</code>, <code>google_container_cluster</code>, <code>google_container_node_pool</code>, <code>google_compute_instance_group</code>, <code>google_compute_firewall</code>, <code>tv_gcp_region</code>, <code>tv_gcp_zone</code>, and the <code>tv_gcp_*</code> group boxes in rule 5</li>
+</ul>
+<p>Some of these read like single services but are boxes: "<code>google_container_cluster.gke</code> → <code>google_sql_database_instance.db</code>" draws Cloud SQL <em>inside</em> a GKE box, and an autoscaling group or security group contains its instances. To show a connection to one of them, point the arrow at a node inside it.
+3. <strong>Leaf nodes</strong> that only appear as targets may be left out as keys; they are drawn as nodes with no outgoing connections. Listing them with <code>[]</code> is equivalent, and is the complete form that <code>terravision graphdata</code> writes. When a node has numbered copies, target the copies (<code>aws_subnet.private~1</code>): an unnumbered name next to its numbered copies can be drawn as an extra, separate node.
+4. <strong>Numbered copies.</strong> Append <code>~1</code>, <code>~2</code>, ... to make distinct instances that share a name, typically one per availability zone.
+5. <strong>External actors.</strong> Use pseudo-types: <code>tv_aws_users</code>, <code>tv_aws_internet</code>, <code>tv_aws_mobile_client</code>, <code>tv_aws_onprem</code>, <code>tv_azurerm_users</code>, <code>tv_azurerm_internet</code>, <code>tv_azure_onprem</code>, <code>tv_gcp_users_icon</code>. For GCP, <code>tv_gcp_users</code>, <code>tv_gcp_onprem</code> and <code>tv_gcp_external_saas</code> are group boxes that contain other nodes (like a VPC), not single icons, and there is no GCP internet icon yet.
+6. <strong>Regions and zones.</strong> <code>tv_aws_region.&lt;name&gt;</code>, <code>tv_aws_az.&lt;name&gt;</code>, <code>tv_azurerm_region.&lt;name&gt;</code>, <code>tv_azurerm_zone.&lt;name&gt;</code>, <code>tv_gcp_region.&lt;name&gt;</code>, <code>tv_gcp_zone.&lt;name&gt;</code> are containers. On Azure a region holds VNets or hubs; a resource group is not regional, so draw it inside a region only when all of its resources are there.
+7. <strong>Modules.</strong> A <code>module.&lt;modname&gt;.</code> prefix, as <code>terravision graphdata</code> writes it, is accepted but draws no module boundary; leave it out when writing a graph by hand.
+8. <strong>One provider per graph.</strong> The diagram's cloud frame (AWS Cloud, Azure, Google Cloud) and its drawing conventions come from the resource type prefixes. A graph that mixes <code>aws_*</code>, <code>azurerm_*</code> and <code>google_*</code> resources (including their <code>tv_*</code> actors) is rejected with an error; draw one diagram per provider.
+9. <strong>Labels and title.</strong> Names are prettified automatically (<code>aws_db_instance.postgres~1</code> becomes "DB Instance Postgres"). Use lowercase snake_case names: hyphens and capitals are mangled (<code>Orders-Table</code> becomes "Orders"). Pass <code>--use-tf-names</code> to label with the raw address instead. The graph cannot carry a title; pass <code>--title</code> (or <code>title</code> to the MCP tools), otherwise the heading is "Cloud Architecture Diagram".
+10. <strong>Flows.</strong> Numbered steps drawn as badges, with a legend, show how a request or data moves. Pass <code>flows</code> to the MCP tools, or put a <code>flows:</code> section in a YAML file and pass <code>--annotate &lt;file&gt;</code>: <code>{"order": {"description": "A customer places an order", "steps": [{"resource": "tv_aws_users.users", "detail": "Customer opens the app"}, {"resource": "aws_alb.api~1 -&gt; aws_ecs_fargate.app~1", "detail": "Request routed to a task"}]}}</code>. A step names a node, or an arrow as <code>&lt;node&gt; -&gt; &lt;node&gt;</code> in either direction; name the numbered copy (<code>aws_alb.api~1</code>), never the bare name. Steps on containers, missing nodes or missing arrows draw no badge and come back as warnings. For a graph, an annotation file may hold only <code>title</code>, <code>flows</code>, <code>connect</code> (labels on existing arrows, rule 11), <code>fontsize</code> and <code>iconsize</code>; anything that would change the drawing belongs in the graph. Add flows when the user asks how requests, data or events move; otherwise deliver the plain diagram, explain the flow in your reply, and end by offering to add it as numbered steps.
+11. <strong>Edge labels.</strong> A few words on an arrow say what the connection does ("Reads secrets", "Publishes events"). Pass <code>edge_labels</code> to the MCP tools as <code>{"aws_ecs_fargate.app~1 -&gt; aws_rds_sqlserver.db": "Reads orders"}</code>, or on the command line put them in the annotation file's <code>connect:</code> section (<code>connect: {aws_ecs_fargate.app~1: [{aws_rds_sqlserver.db: Reads orders}]}</code>). Either direction names the arrow. A label never adds an arrow: one on a missing arrow, or an arrow to a container, is not drawn and comes back as a warning. Add labels when the user asks what the connections do; otherwise offer them together with flows after delivering the diagram.</p>
+</li>
+</ol>
+<h2 id="drawn-as-written">Drawn as written<a class="headerlink" href="#drawn-as-written" title="Permanent link">¶</a></h2>
+<p>TerraVision draws a graph file as written. Unlike a diagram from Terraform code, nothing is added, moved, grouped or merged for you. A few drawing rules still apply and explain most surprises:</p>
+<ul>
+<li>
+<p><strong>Shared services have no arrows.</strong> Arrows to or from these types are not drawn, because almost everything talks to them and the lines would cover the diagram:</p>
+<ul>
+<li>AWS: <code>aws_cloudwatch_log_group</code>, <code>aws_ecr_repository</code>, <code>aws_acm_certificate</code>, <code>aws_kms_key</code>, <code>aws_ssm_parameter</code>, <code>aws_efs_file_system</code>, <code>aws_eip</code></li>
+<li>Azure: <code>azurerm_key_vault</code>, <code>azurerm_monitor</code>, <code>azurerm_log_analytics_workspace</code>, <code>azurerm_container_registry</code>, <code>azurerm_storage_account</code></li>
+<li>GCP: <code>google_kms_key_ring</code>, <code>google_logging_project_sink</code>, <code>google_monitoring_dashboard</code>, <code>google_container_registry</code>, <code>google_secret_manager_secret</code></li>
+</ul>
+<p>On AWS and Azure, list them in <code>aws_group.shared_services</code> or <code>azurerm_group.shared_services</code> to draw them together in a Shared Services box; otherwise they float on their own. A few source types, such as <code>aws_ecs_service</code> and <code>aws_alb</code>, keep their arrows to a shared service.
+- <strong>Arrows to a container are not drawn.</strong> <code>aws_lambda_function.fn → aws_vpc.main</code> shows nothing; point at a node inside the container.
+- <strong>Peerings are lines between networks.</strong> <code>aws_vpc_peering_connection</code>, <code>azurerm_virtual_network_peering</code> and <code>google_compute_network_peering</code> draw as a line between two network boxes, not as an icon. List the peering in its own network and have it list the network it connects to: <code>"aws_vpc.a": ["aws_subnet.a", "aws_vpc_peering_connection.a_to_b"]</code>, <code>"aws_vpc_peering_connection.a_to_b": ["aws_vpc.b"]</code>.
+- <strong>A node sits in one container.</strong> Listing it under two subnets draws it in only one of them; use numbered copies (<code>aws_alb.web~1</code>, <code>aws_alb.web~2</code>) for one per subnet.
+- <strong>Zones follow the cloud.</strong> On AWS a subnet belongs to one availability zone (<code>tv_aws_az</code> holds <code>aws_subnet</code>), so a resource that spans zones gets one numbered copy in each zone's subnet: load balancers, NAT gateways, ECS or EC2 tiers and Multi-AZ databases (<code>aws_alb.web~1</code> in <code>aws_subnet.public~1</code>, <code>aws_alb.web~2</code> in <code>aws_subnet.public~2</code>), with arrows pointing at the copies. On Azure and GCP a subnet spans the region's zones: draw zone-redundant or regional services (Application Gateway, NAT gateway, load balancers, managed instance groups) once in their subnet, and put per-zone instances in <code>tv_azurerm_zone</code> or <code>tv_gcp_zone</code> boxes inside the subnet.
+- <strong>Two-way connections draw one arrow.</strong> If A lists B and B lists A, only one direction is shown; list the main direction of flow.
+- <strong>Nesting is literal.</strong> Edge services (CloudFront, Route 53, API Gateway, WAF) and external actors stay wherever you nest them, so keep them at the top level rather than inside a VPC or subnet. Containers with nothing in them are not drawn.</p>
+</li>
+</ul>
+<h2 id="full-examples">Full examples<a class="headerlink" href="#full-examples" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Example</th>
+<th>Provider</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Three-tier web app: CloudFront, ALB, EC2 across two AZs, RDS, ElastiCache</td>
+<td>AWS</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/three-tier-web.tvg.json">three-tier-web.tvg.json</a></td>
+</tr>
+<tr>
+<td>Event-driven order pipeline: API Gateway, Lambda, SQS, SNS, DynamoDB, Firehose, Glue, Athena</td>
+<td>AWS</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-event-driven.tvg.json">aws-event-driven.tvg.json</a></td>
+</tr>
+<tr>
+<td>Three-tier web app: Front Door with WAF, Application Gateway, Container Apps across two zones, Azure SQL via private endpoint, NAT gateway</td>
+<td>Azure</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-three-tier.tvg.json">azure-three-tier.tvg.json</a></td>
+</tr>
+<tr>
+<td>Web app with Front Door, App Service, Functions, SQL, Service Bus, Key Vault</td>
+<td>Azure</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-web-app.tvg.json">azure-web-app.tvg.json</a></td>
+</tr>
+<tr>
+<td>Three-tier web app: HTTPS LB with Cloud Armor, managed instance group across two zones, Cloud SQL, Memorystore, Cloud NAT</td>
+<td>GCP</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-three-tier.tvg.json">gcp-three-tier.tvg.json</a></td>
+</tr>
+<tr>
+<td>Serverless API: HTTPS LB, Cloud Run, Cloud SQL, Pub/Sub, Cloud Functions, BigQuery</td>
+<td>GCP</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-serverless-api.tvg.json">gcp-serverless-api.tvg.json</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="why-not-mermaid">Why not Mermaid?<a class="headerlink" href="#why-not-mermaid" title="Permanent link">¶</a></h2>
+<p>Mermaid draws boxes and arrows. It has no notion of the AWS, Azure or GCP icon sets, of VPC and subnet nesting, or of the layout conventions cloud architects expect. TerraVision produces the diagram a cloud architect would draw by hand, from a JSON file an LLM can emit in one shot.</p>
+<p>That advantage only applies to cloud infrastructure. For sequence diagrams, flowcharts, class or ER diagrams, code structure or anything that is not AWS, Azure or GCP resources, Mermaid or a similar tool remains the right choice.</p>
+<h2 id="getting-the-graph-from-real-infrastructure-instead">Getting the graph from real infrastructure instead<a class="headerlink" href="#getting-the-graph-from-real-infrastructure-instead" title="Permanent link">¶</a></h2>
+<p>If you have Terraform, <code>terravision graphdata --source ./tf --outfile architecture.tvg.json</code> exports the real graph in exactly this format, so the same tooling works for diagrams of what is actually deployed.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © Patrick Chugh
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/patrickchugh/terravision" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://youtu.be/bTrWHBI2mF4" target="_blank" rel="noopener" title="youtu.be" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/terravision/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "toc.follow", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
